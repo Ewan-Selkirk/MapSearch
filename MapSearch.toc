@@ -1,6 +1,7 @@
 ## Interface: 110107
 ## Title: Map Search
 ## Notes: Simple addon that adds a search bar to the map
-## Version: 0.0.1
+## Version: 0.0.2
 
+MapSearch.xml
 MapSearch.lua
