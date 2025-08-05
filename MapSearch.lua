@@ -1,13 +1,14 @@
 local addonName, addon = ...
 
 local sort = {byId = 0, byName = 1}
+local maxLocations = 3000
 local locationData = {}
 local searchResults = {}
 
 -- I don't think there is an API for accessing all the map locations so for now lets brute force it :)
-for i=1,3000 do
+for i=1,maxLocations do
 	if C_Map.GetMapInfo(i) ~= nil then
-		table.insert(locationData, C_Map.GetMapInfo(i))
+		locationData[i] =  C_Map.GetMapInfo(i)
 	end
 end
 
@@ -28,42 +29,26 @@ searchFrame:SetFrameStrata("HIGH")
 searchFrame:SetSize(165, 29 + 205)
 
 function searchFrame:SetSearchButtonLocation(mapId)
-	-- This function works, but finding the right places to call it is iffy.
-	-- For now, keep the search button below the group selector and figure it out later
+	local mapGroupID = C_Map.GetMapGroupID(mapId);
+	if not mapGroupID then
+		self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, 0)
+		return
+	end
 
-	-- local mapGroupID = C_Map.GetMapGroupID(mapId);
-	-- if not mapGroupID then
-	-- 	self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, 0)
-	-- 	return
-	-- end
-
-	-- local mapGroupMembersInfo = C_Map.GetMapGroupMembersInfo(mapGroupID);
-	-- if not mapGroupMembersInfo then
-	-- 	self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, 0)
-	-- 	return
-	-- end
+	local mapGroupMembersInfo = C_Map.GetMapGroupMembersInfo(mapGroupID);
+	if not mapGroupMembersInfo then
+		self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, 0)
+		return
+	end
 
 	self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, -24)
 end
 searchFrame:SetSearchButtonLocation(C_Map.GetBestMapForUnit("player"))
 
-searchFrame:RegisterEvent("PLAYER_MAP_CHANGED")
--- searchFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 searchFrame:RegisterEvent("WORLD_MAP_OPEN")
 searchFrame:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
 end)
-
-function searchFrame:PLAYER_MAP_CHANGED(oldMap, newMap)
-	-- Currently isn't working right now for some reason...
-	-- Will figure it out another time :(
-	print("Player moved from zone: " .. oldMap .. " to new zone: " .. newMap)
-	searchFrame:SetSearchButtonLocation(newMap)
-end
-
-function searchFrame:ZONE_CHANGED_NEW_AREA()
-	searchFrame:SetSearchButtonLocation(C_Map.GetBestMapForUnit("player"))
-end
 
 function searchFrame:WORLD_MAP_OPEN(mapId)
 	searchFrame:SetSearchButtonLocation(mapId)
@@ -86,7 +71,6 @@ searchFrame.searchBar:SetHeight(searchFrame.searchButton:GetHeight())
 searchFrame.searchBar:SetFrameStrata("HIGH")
 searchFrame.searchBar:Hide()
 
--- searchFrame.searchBar:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 searchFrame.searchBar:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
 end)
@@ -100,18 +84,22 @@ searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 		-- Do Nothing
 	elseif tonumber(self:GetText()) ~= nil then
 		-- Search by ID
-		for i=1,#locationData do
-			if string.find(locationData[i].mapID, self:GetText()) then
-				table.insert(searchResults, locationData[i])
-				data:Insert(locationData[i])
+		for i=1,maxLocations do
+			if locationData[i] ~= nil then
+				if string.find(locationData[i].mapID, self:GetText()) then
+					table.insert(searchResults, locationData[i])
+					data:Insert(locationData[i])
+				end
 			end
 		end
 	else
 		-- Search by Name
-		for i=1,#locationData do
-			if string.find(string.lower(locationData[i].name), string.lower(self:GetText())) then
-				table.insert(searchResults, locationData[i])
-				data:Insert(locationData[i])
+		for i=1,maxLocations do
+			if locationData[i] ~= nil then
+				if string.find(string.lower(locationData[i].name), string.lower(self:GetText())) then
+					table.insert(searchResults, locationData[i])
+					data:Insert(locationData[i])
+				end
 			end
 		end
 	end
@@ -121,12 +109,15 @@ end)
 
 searchFrame.searchBar:SetScript("OnEnterPressed", function(self)
 	if tonumber(self:GetText()) ~= nil then
-		C_Map.OpenWorldMap(tonumber(self:GetText()))
-		local m = locationData[tonumber(self:GetText())]
+		local num = tonumber(self:GetText())
+		C_Map.OpenWorldMap(num)
+
+		local m = locationData[num]
 		print("Opening map:", m.name, m.mapID)
 	else
 		if #searchResults ~= 0 then
 			C_Map.OpenWorldMap(searchResults[1].mapID)
+			print("Opening map:", searchResults[1].name, searchResults[1].mapID)
 		end
 	end
 	self:ClearFocus()
@@ -190,5 +181,13 @@ local function CreateSearchItem(button, data)
 end
 
 ScrollView:SetElementInitializer("UIPanelButtonTemplate", CreateSearchItem)
+
+WorldMapFrame:HookScript("OnShow", function (...)
+	searchFrame:SetSearchButtonLocation(C_Map.GetBestMapForUnit("player"))
+end, LE_SCRIPT_BINDING_TYPE_INTRINSIC_POSTCALL)
+
+hooksecurefunc(MapCanvasMixin, "OnMapChanged", function(...)
+	searchFrame:SetSearchButtonLocation(WorldMapFrame.mapID)
+end)
 
 -- /run for k,v in pairs(WorldMapFrame.ScrollContainer.Child) do print(k,v) end
