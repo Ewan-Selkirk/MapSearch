@@ -23,59 +23,37 @@ local function GetMapTypeFromEnum(value)
 end
 
 local ScrollView = CreateScrollBoxListLinearView()
-local searchFrame = CreateFrame("Frame", "MapSearch", WorldMapFrame)
+addon.searchFrame = CreateFrame("Frame", "MapSearch", WorldMapFrame)
 
-searchFrame:SetFrameStrata("HIGH")
-searchFrame:SetSize(165, 29 + 205)
+addon.searchFrame:SetFrameStrata("HIGH")
+addon.searchFrame:SetSize(165, 35 + 205)
 
-function searchFrame:SetSearchButtonLocation(mapId)
-	local mapGroupID = C_Map.GetMapGroupID(mapId);
-	if not mapGroupID then
-		self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, 0)
-		return
-	end
-
-	local mapGroupMembersInfo = C_Map.GetMapGroupMembersInfo(mapGroupID);
-	if not mapGroupMembersInfo then
-		self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, 0)
-		return
-	end
-
-	self:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, -24)
-end
-searchFrame:SetSearchButtonLocation(C_Map.GetBestMapForUnit("player"))
-
-searchFrame:RegisterEvent("WORLD_MAP_OPEN")
-searchFrame:SetScript("OnEvent", function(self, event, ...)
+addon.searchFrame:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
 end)
 
-function searchFrame:WORLD_MAP_OPEN(mapId)
-	searchFrame:SetSearchButtonLocation(mapId)
-end
+addon.searchFrame.searchButton = CreateFrame("Button", "MapSearchIcon", WorldMapFrame, "MapSearchButtonTemplate")
+addon.searchFrame.searchBar = CreateFrame("EditBox", "MapSearchBar", WorldMapFrame, "SearchBoxTemplate")
+addon.searchFrame.scrollContainer = CreateFrame("Frame", "MapSearchScroll", WorldMapFrame, "WowScrollBoxList")
+addon.searchFrame.scrollBar = CreateFrame("EventFrame", "MapSearchScrollBar", WorldMapFrame, "MinimalScrollBar")
 
-searchFrame.searchButton = CreateFrame("Button", "MapSearchIcon", WorldMapFrame, "MapSearchButtonTemplate")
-searchFrame.searchBar = CreateFrame("EditBox", "MapSearchBar", WorldMapFrame, "SearchBoxTemplate")
-searchFrame.scrollContainer = CreateFrame("Frame", "MapSearchScroll", WorldMapFrame, "WowScrollBoxList")
-searchFrame.scrollBar = CreateFrame("EventFrame", "MapSearchScrollBar", WorldMapFrame, "MinimalScrollBar")
+addon.searchFrame.searchButton:SetPoint("LEFT", addon.searchFrame)
+addon.searchFrame.searchButton:SetPoint("TOP", addon.searchFrame, "TOP")
 
-searchFrame.searchButton:SetPoint("LEFT", searchFrame)
-searchFrame.searchButton:SetPoint("TOP", searchFrame, "TOP")
+addon.searchFrame.searchBar:SetPoint("RIGHT", addon.searchFrame, "RIGHT")
+addon.searchFrame.searchBar:SetPoint("LEFT", addon.searchFrame.searchButton, 38, 0)
+addon.searchFrame.searchBar:SetPoint("TOP", addon.searchFrame, "TOP")
+addon.searchFrame.searchBar:SetAutoFocus(false)
+addon.searchFrame.searchBar:SetWidth(addon.searchFrame:GetWidth() - addon.searchFrame.searchButton:GetWidth() - 2)
+addon.searchFrame.searchBar:SetHeight(addon.searchFrame.searchButton:GetHeight())
+addon.searchFrame.searchBar:SetFrameStrata("HIGH")
+addon.searchFrame.searchBar:Hide()
 
-searchFrame.searchBar:SetPoint("RIGHT", searchFrame, "RIGHT")
-searchFrame.searchBar:SetPoint("LEFT", searchFrame.searchButton, 38, 0)
-searchFrame.searchBar:SetPoint("TOP", searchFrame, "TOP")
-searchFrame.searchBar:SetAutoFocus(false)
-searchFrame.searchBar:SetWidth(searchFrame:GetWidth() - searchFrame.searchButton:GetWidth() - 2)
-searchFrame.searchBar:SetHeight(searchFrame.searchButton:GetHeight())
-searchFrame.searchBar:SetFrameStrata("HIGH")
-searchFrame.searchBar:Hide()
-
-searchFrame.searchBar:SetScript("OnEvent", function(self, event, ...)
+addon.searchFrame.searchBar:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
 end)
 
-searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
+addon.searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 	SearchBoxTemplate_OnTextChanged(self)
 	local data = CreateDataProvider()
 	searchResults = {}
@@ -107,45 +85,47 @@ searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 	ScrollView:SetDataProvider(data)
 end)
 
-searchFrame.searchBar:SetScript("OnEnterPressed", function(self)
+addon.searchFrame.searchBar:SetScript("OnEnterPressed", function(self)
 	if tonumber(self:GetText()) ~= nil then
 		local num = tonumber(self:GetText())
-		C_Map.OpenWorldMap(num)
+		addon:OpenMap(num)
 
 		local m = locationData[num]
 		print("Opening map:", m.name, m.mapID)
 	else
 		if #searchResults ~= 0 then
-			C_Map.OpenWorldMap(searchResults[1].mapID)
+			addon:OpenMap(searchResults[1].mapID)
 			print("Opening map:", searchResults[1].name, searchResults[1].mapID)
 		end
 	end
 	self:ClearFocus()
 	self:SetText("")
 	self:Hide()
-	searchFrame.scrollContainer:Hide()
-	searchFrame.searchButton.ActiveTexture:SetShown(searchFrame.scrollContainer:IsShown());
+	addon.searchFrame.scrollContainer:Hide()
+	addon.searchFrame.searchButton.ActiveTexture:SetShown(addon.searchFrame.scrollContainer:IsShown());
+	
+	ScrollView:SetDataProvider(CreateDataProvider())
 end)
 
-searchFrame.searchBar:SetScript("OnEscapePressed", function(self)
+addon.searchFrame.searchBar:SetScript("OnEscapePressed", function(self)
 	self:SetText("")
 	self:ClearFocus()
 	self:Hide()
-	searchFrame.scrollContainer:Hide()
-	searchFrame.searchButton.ActiveTexture:SetShown(searchFrame.scrollContainer:IsShown());
+	addon.searchFrame.scrollContainer:Hide()
+	addon.searchFrame.searchButton.ActiveTexture:SetShown(addon.searchFrame.scrollContainer:IsShown());
 end)
 
-searchFrame.scrollContainer:SetSize(searchFrame:GetWidth(), searchFrame:GetHeight() - 35)
-searchFrame.scrollContainer:SetPoint("TOPLEFT", searchFrame.searchButton, "BOTTOMLEFT", 0, 0)
-searchFrame.scrollContainer:SetPoint("BOTTOMRIGHT", searchFrame, "BOTTOMRIGHT")
-searchFrame.scrollContainer:SetFrameStrata("HIGH")
-searchFrame.scrollContainer:Hide()
+addon.searchFrame.scrollContainer:SetSize(addon.searchFrame:GetWidth(), addon.searchFrame:GetHeight() - 35)
+addon.searchFrame.scrollContainer:SetPoint("TOPLEFT", addon.searchFrame.searchButton, "BOTTOMLEFT", 0, 0)
+addon.searchFrame.scrollContainer:SetPoint("BOTTOMRIGHT", addon.searchFrame, "BOTTOMRIGHT")
+addon.searchFrame.scrollContainer:SetFrameStrata("HIGH")
+addon.searchFrame.scrollContainer:Hide()
 
-searchFrame.scrollBar:SetPoint("TOPLEFT", searchFrame.scrollContainer, "TOPRIGHT")
-searchFrame.scrollBar:SetPoint("BOTTOMLEFT", searchFrame.scrollContainer, "BOTTOMRIGHT")
-searchFrame.scrollBar:SetHideIfUnscrollable(true)
+addon.searchFrame.scrollBar:SetPoint("TOPLEFT", addon.searchFrame.scrollContainer, "TOPRIGHT")
+addon.searchFrame.scrollBar:SetPoint("BOTTOMLEFT", addon.searchFrame.scrollContainer, "BOTTOMRIGHT")
+addon.searchFrame.scrollBar:SetHideIfUnscrollable(true)
 
-ScrollUtil.InitScrollBoxListWithScrollBar(searchFrame.scrollContainer, searchFrame.scrollBar, ScrollView)
+ScrollUtil.InitScrollBoxListWithScrollBar(addon.searchFrame.scrollContainer, addon.searchFrame.scrollBar, ScrollView)
 
 local function CreateSearchItem(button, data)
 	local locName = data.name
@@ -153,12 +133,12 @@ local function CreateSearchItem(button, data)
 	local locType = data.mapType
 
 	button:SetScript("OnClick", function()
-		C_Map.OpenWorldMap(locId)
-		searchFrame.searchBar:SetText("")
-		searchFrame.searchBar:ClearFocus()
-		searchFrame.searchBar:Hide()
-		searchFrame.scrollContainer:Hide()
-		searchFrame.searchButton.ActiveTexture:SetShown(false);
+		addon:OpenMap(locId)
+		addon.searchFrame.searchBar:SetText("")
+		addon.searchFrame.searchBar:ClearFocus()
+		addon.searchFrame.searchBar:Hide()
+		addon.searchFrame.scrollContainer:Hide()
+		addon.searchFrame.searchButton.ActiveTexture:SetShown(false);
 
 		ScrollView:SetDataProvider(CreateDataProvider())
 	end)
@@ -183,11 +163,12 @@ end
 ScrollView:SetElementInitializer("UIPanelButtonTemplate", CreateSearchItem)
 
 WorldMapFrame:HookScript("OnShow", function (...)
-	searchFrame:SetSearchButtonLocation(C_Map.GetBestMapForUnit("player"))
+	print("World Map Opened!")
+	addon:SetSearchButtonLocation(C_Map.GetBestMapForUnit("player"))
 end, LE_SCRIPT_BINDING_TYPE_INTRINSIC_POSTCALL)
 
 hooksecurefunc(MapCanvasMixin, "OnMapChanged", function(...)
-	searchFrame:SetSearchButtonLocation(WorldMapFrame.mapID)
+	addon:SetSearchButtonLocation(WorldMapFrame.mapID)
 end)
 
 -- /run for k,v in pairs(WorldMapFrame.ScrollContainer.Child) do print(k,v) end

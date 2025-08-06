@@ -8,7 +8,7 @@ function MapSearchButtonMixin:OnClick()
 end
 
 function MapSearchButtonMixin:OnEnter()
-	GameTooltip:SetOwner(self, "ANCHOR_TOP")
+	GameTooltip:SetOwner(self, (select(4, GetBuildInfo()) == 50500) and "ANCHOR_BOTTOM" or "ANCHOR_TOP")
 	GameTooltip:AddLine("Search for Map", 1, 1, 1)
 	GameTooltip:AddLine("Player Location ID: ".. tostring(C_Map.GetBestMapForUnit("player")), 1.0, 0.82, 0.0)
 
