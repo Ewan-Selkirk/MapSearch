@@ -24,7 +24,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
-				<Texture parentKey="Icon" file="Interface\AddOns\MapSearch\SearchIcon">
+				<Texture parentKey="Icon" file="Interface\AddOns\MapSearch\Assets\SearchIcon">
 					<Size x="20" y="20"/>
 					<Anchors>
 						<Anchor point="TOPLEFT" x="7" y="-6"/>

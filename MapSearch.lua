@@ -49,10 +49,6 @@ addon.searchFrame.searchBar:SetHeight(addon.searchFrame.searchButton:GetHeight()
 addon.searchFrame.searchBar:SetFrameStrata("HIGH")
 addon.searchFrame.searchBar:Hide()
 
-addon.searchFrame.searchBar:SetScript("OnEvent", function(self, event, ...)
-	self[event](self, ...)
-end)
-
 addon.searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 	SearchBoxTemplate_OnTextChanged(self)
 	local data = CreateDataProvider()
@@ -103,7 +99,7 @@ addon.searchFrame.searchBar:SetScript("OnEnterPressed", function(self)
 	self:Hide()
 	addon.searchFrame.scrollContainer:Hide()
 	addon.searchFrame.searchButton.ActiveTexture:SetShown(addon.searchFrame.scrollContainer:IsShown());
-	
+
 	ScrollView:SetDataProvider(CreateDataProvider())
 end)
 

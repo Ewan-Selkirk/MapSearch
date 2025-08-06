@@ -1,10 +1,12 @@
+local _, addon = ...
+
 MapSearchButtonMixin = {}
 
 function MapSearchButtonMixin:OnClick()
-	MapSearchBar:SetShown(not MapSearchBar:IsShown())
-	MapSearchScroll:SetShown(MapSearchBar:IsShown())
+	addon.searchFrame.searchBar:SetShown(not addon.searchFrame.searchBar:IsShown())
+	addon.searchFrame.scrollContainer:SetShown(addon.searchFrame.searchBar:IsShown())
 
-	self.ActiveTexture:SetShown(MapSearchBar:IsShown());
+	self.ActiveTexture:SetShown(addon.searchFrame.searchBar:IsShown());
 end
 
 function MapSearchButtonMixin:OnEnter()
