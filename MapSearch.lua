@@ -60,7 +60,7 @@ addon.searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 		-- Search by ID
 		for i=1,maxLocations do
 			if locationData[i] ~= nil then
-				if string.find(locationData[i].mapID, self:GetText()) then
+				if string.find(locationData[i].mapID, self:GetText(), 1, true) then
 					table.insert(searchResults, locationData[i])
 					data:Insert(locationData[i])
 				end
@@ -70,7 +70,7 @@ addon.searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 		-- Search by Name
 		for i=1,maxLocations do
 			if locationData[i] ~= nil then
-				if string.find(string.lower(locationData[i].name), string.lower(self:GetText())) then
+				if string.find(string.lower(locationData[i].name), string.lower(self:GetText()), 1, true) then
 					table.insert(searchResults, locationData[i])
 					data:Insert(locationData[i])
 				end
