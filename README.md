@@ -20,4 +20,8 @@ Allows for maps to be searched for by name or ID.
 ### The expanded World Map Frame in Classic
 ![The expanded World Map Frame in Classic](img/ClassicMapFrameLarge.jpg)
 
-<a href="https://www.curseforge.com/minecraft/mc-mods/dimension-viewer">![CurseForge Link](https://cf.way2muchnoise.eu/title/1322786(989AFF).svg?badge_style=for_the_badge)</a>
+
+## Get it
+MapSearch is available for download on CurseForge!
+
+<a href="https://www.curseforge.com/wow/addons/mapsearch">![CurseForge Link](https://cf.way2muchnoise.eu/title/1322786(989AFF).svg?badge_style=for_the_badge)</a>
