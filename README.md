@@ -20,6 +20,11 @@ Allows for maps to be searched for by name or ID.
 ### The expanded World Map Frame in Classic
 ![The expanded World Map Frame in Classic](img/ClassicMapFrameLarge.jpg)
 
+## Updates
+### 0.2.0
+Added the ability to sort and filter the search results!
+![The new settings menu added in 0.2.0](img/RetailSettingsMenu.jpg)
+
 
 ## Get it
 MapSearch is available for download on CurseForge!
