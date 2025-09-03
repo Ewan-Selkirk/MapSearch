@@ -1,8 +1,9 @@
 ## Interface: 110200, 50500
 ## Title: Map Search
 ## Notes: Simple addon that adds a search bar to the map
-## Version: 0.1.0
+## Version: 0.2.0
 ## IconTexture: Interface\AddOns\MapSearch\Assets\Icon
+## SavedVariables: MapSearchSettings
 
 MapSearch.xml
 MapSearch.lua

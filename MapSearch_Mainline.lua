@@ -11,6 +11,8 @@ function addon:OpenMap(mapId)
 end
 
 function addon:SetSearchButtonLocation(mapId)
+	if not mapId then return end
+
 	local mapGroupID = C_Map.GetMapGroupID(mapId);
 	if not mapGroupID then
 		addon.searchFrame:SetPoint("TOPLEFT", WorldMapFrame.ScrollContainer, 0, 0)

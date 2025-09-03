@@ -66,4 +66,79 @@
 			<OnMouseUp method="OnMouseUp" />
         </Scripts>
     </Button>
+
+	<Frame name="MapSearchSettingsFrame" frameStrata="HIGH" virtual="true" inherits="DialogBorderDarkTemplate">
+		<Frames>
+			<Button name="MapSearchSettings_SortId" text="Sort by ID" virtual="true" inherits="UIPanelButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent" x="16" y="-68" />
+					<Anchor point="TOPRIGHT" relativeKey="$parent" x="-16" y="-68" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MapSearchSettings["sort"] = 0
+						self:Disable()
+						MapSearchSettings_SortName:Enable()
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<Button name="MapSearchSettings_SortName" text="Sort by Name" virtual="true" inherits="UIPanelButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent" x="16" y="-92" />
+					<Anchor point="TOPRIGHT" relativeKey="$parent" x="-16" y="-92" />
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MapSearchSettings["sort"] = 1
+						self:Disable()
+						MapSearchSettings_SortId:Enable()
+					</OnClick>
+				</Scripts>
+			</Button>
+
+			<Button name="MapSearchSettingsClose" text="Close" virtual="true" inherits="UIPanelButtonTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativeKey="$parent" x="16" y="12" />
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent" x="-16" y="12" />
+				</Anchors>
+
+				<Scripts>
+					<OnClick>
+						self:GetParent():Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString text="MapSearch Settings" inherits="GameFontNormal" justifyH="CENTER">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent" y="-12" />
+						<Anchor point="TOPRIGHT" relativeKey="$parent" y="-12" />
+					</Anchors>
+				</FontString>
+			</Layer>
+
+			<Layer level="OVERLAY">
+				<FontString text="Sort" inherits="GameFontNormal" justifyH="LEFT">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent" x="16" y="-34" />
+						<Anchor point="TOPRIGHT" relativeKey="$parent" x="16" y="-34" />
+					</Anchors>
+				</FontString>
+			</Layer>
+
+			<Layer level="OVERLAY">
+				<FontString text="Filter" inherits="GameFontNormal" justifyH="LEFT">
+					<Anchors>
+						<Anchor point="CENTER" />
+						<Anchor point="TOPLEFT" relativeKey="$parent" x="16" y="-122" />
+						<Anchor point="TOPRIGHT" relativeKey="$parent" x="16" y="-122" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
 </Ui>

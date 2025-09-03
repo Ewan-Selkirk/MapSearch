@@ -1,9 +1,23 @@
 local addonName, addon = ...
 
-local sort = {byId = 0, byName = 1}
-local maxLocations = 3000
+local sortType = {byId = 0, byName = 1}
+local maxLocations = 5000
 local locationData = {}
 local searchResults = {}
+
+local defaultSettings = {
+	useSorting = true,
+	sort = sortType.byName,
+	filters = {					-- <Based on Enum.UIMapType>
+		true, 					-- Cosmic
+		true,					-- World
+		true,					-- Continent
+		true,					-- Zone
+		true,					-- Dungeon
+		true,					-- Micro
+		false					-- Orphan
+	}
+}
 
 -- I don't think there is an API for accessing all the map locations so for now lets brute force it :)
 for i=1,maxLocations do
@@ -22,23 +36,87 @@ local function GetMapTypeFromEnum(value)
 	return nil
 end
 
+local function sortSearchResults(results)
+	table.sort(results, function(a, b)
+		if MapSearchSettings.sort == sortType.byId then
+			return a.mapID < b.mapID
+		elseif MapSearchSettings.sort == sortType.byName then
+			return a.name < b.name
+		else
+			return false
+		end
+	end)
+end
+
 local ScrollView = CreateScrollBoxListLinearView()
 addon.searchFrame = CreateFrame("Frame", "MapSearch", WorldMapFrame)
 
 addon.searchFrame:SetFrameStrata("HIGH")
 addon.searchFrame:SetSize(165, 35 + 205)
+addon.searchFrame:RegisterEvent("ADDON_LOADED")
 
 addon.searchFrame:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
 end)
 
+function addon.searchFrame:ADDON_LOADED(a)
+	if a ~= addonName then return end
+
+	-- Check if there is already a config or create a new one.
+	-- If one already exists, check that there aren't any missing values
+	if not MapSearchSettings then
+		MapSearchSettings = defaultSettings
+	else
+		-- Add missing settings
+		for k, v in pairs(defaultSettings) do
+			if not MapSearchSettings[k] then MapSearchSettings[k] = v end
+		end
+
+		-- Remove any unnecessary settings (not working at the moment. Oh well, doesn't really matter ¯\_(ツ)_/¯ )
+		-- local i = 1
+		-- for k, v in pairs(MapSearchSettings) do
+		-- 	if not defaultSettings[k] then table.remove(MapSearchSettings, i) end
+		-- 	i = i + 1
+		-- end
+	end
+
+	-- Create sort toggle checkbox
+	local sortToggle = CreateFrame("CheckButton", "MapSearchSettings_SortToggle", addon.searchFrame.settingsFrame, "ChatConfigCheckButtonTemplate")
+	sortToggle:SetPoint("TOPLEFT", addon.searchFrame.settingsFrame, "TOPLEFT", 12, -46)
+	sortToggle:SetChecked(MapSearchSettings["useSorting"])
+	sortToggle.Text:SetText("Enable Sorting")
+	sortToggle:HookScript("OnClick", function()
+		MapSearchSettings["useSorting"] = not MapSearchSettings["useSorting"]
+		MapSearchSettings_SortName:SetEnabled(MapSearchSettings["useSorting"] and MapSearchSettings["sort"] ~= sortType.byName)
+		MapSearchSettings_SortId:SetEnabled(MapSearchSettings["useSorting"] and MapSearchSettings["sort"] ~= sortType.byId)
+	end)
+
+	-- Create filter checkboxes
+	for k, v in pairs(Enum.UIMapType) do
+		local f = CreateFrame("CheckButton", "MapSearchSettings_Filter" .. k, addon.searchFrame.settingsFrame, "ChatConfigCheckButtonTemplate")
+		f:SetPoint("TOPLEFT", addon.searchFrame.settingsFrame, "TOPLEFT", 12, -112 - 24 * (v + 1))
+		f:SetChecked(MapSearchSettings["filters"][v + 1])
+		f.Text:SetText("Show " .. k)
+
+		f:HookScript("OnClick", function ()
+			MapSearchSettings["filters"][v + 1] = not MapSearchSettings["filters"][v + 1]
+		end)
+	end
+
+	-- Disable sort buttons based on the current sort type
+	MapSearchSettings_SortName:SetEnabled(MapSearchSettings["useSorting"] and MapSearchSettings["sort"] ~= sortType.byName)
+	MapSearchSettings_SortId:SetEnabled(MapSearchSettings["useSorting"] and MapSearchSettings["sort"] ~= sortType.byId)
+end
+
 addon.searchFrame.searchButton = CreateFrame("Button", "MapSearchIcon", WorldMapFrame, "MapSearchButtonTemplate")
 addon.searchFrame.searchBar = CreateFrame("EditBox", "MapSearchBar", WorldMapFrame, "SearchBoxTemplate")
 addon.searchFrame.scrollContainer = CreateFrame("Frame", "MapSearchScroll", WorldMapFrame, "WowScrollBoxList")
 addon.searchFrame.scrollBar = CreateFrame("EventFrame", "MapSearchScrollBar", WorldMapFrame, "MinimalScrollBar")
+addon.searchFrame.settingsFrame = CreateFrame("Frame", "MapSearchSettings", WorldMapFrame, "MapSearchSettingsFrame")
 
 addon.searchFrame.searchButton:SetPoint("LEFT", addon.searchFrame)
 addon.searchFrame.searchButton:SetPoint("TOP", addon.searchFrame, "TOP")
+addon.searchFrame.searchButton:RegisterForClicks("AnyUp")
 
 addon.searchFrame.searchBar:SetPoint("RIGHT", addon.searchFrame, "RIGHT")
 addon.searchFrame.searchBar:SetPoint("LEFT", addon.searchFrame.searchButton, 38, 0)
@@ -49,8 +127,8 @@ addon.searchFrame.searchBar:SetHeight(addon.searchFrame.searchButton:GetHeight()
 addon.searchFrame.searchBar:SetFrameStrata("HIGH")
 addon.searchFrame.searchBar:Hide()
 
-addon.searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
-	SearchBoxTemplate_OnTextChanged(self)
+addon.searchFrame.searchBar:HookScript("OnTextChanged", function(self, ...)
+	-- SearchBoxTemplate_OnTextChanged(self)
 	local data = CreateDataProvider()
 	searchResults = {}
 
@@ -61,8 +139,9 @@ addon.searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 		for i=1,maxLocations do
 			if locationData[i] ~= nil then
 				if string.find(locationData[i].mapID, self:GetText(), 1, true) then
-					table.insert(searchResults, locationData[i])
-					data:Insert(locationData[i])
+					if MapSearchSettings["filters"][locationData[i].mapType + 1] then
+						table.insert(searchResults, locationData[i])
+					end
 				end
 			end
 		end
@@ -71,13 +150,19 @@ addon.searchFrame.searchBar:SetScript("OnTextChanged", function(self, ...)
 		for i=1,maxLocations do
 			if locationData[i] ~= nil then
 				if string.find(string.lower(locationData[i].name), string.lower(self:GetText()), 1, true) then
-					table.insert(searchResults, locationData[i])
-					data:Insert(locationData[i])
+					if MapSearchSettings["filters"][locationData[i].mapType + 1] then
+						table.insert(searchResults, locationData[i])
+					end
 				end
 			end
 		end
 	end
 
+	if MapSearchSettings.useSorting then sortSearchResults(searchResults) end
+
+	for i=1,#searchResults do
+		data:Insert(searchResults[i])
+	end
 	ScrollView:SetDataProvider(data)
 end)
 
@@ -120,6 +205,11 @@ addon.searchFrame.scrollContainer:Hide()
 addon.searchFrame.scrollBar:SetPoint("TOPLEFT", addon.searchFrame.scrollContainer, "TOPRIGHT")
 addon.searchFrame.scrollBar:SetPoint("BOTTOMLEFT", addon.searchFrame.scrollContainer, "BOTTOMRIGHT")
 addon.searchFrame.scrollBar:SetHideIfUnscrollable(true)
+
+addon.searchFrame.settingsFrame:SetSize(150, 300)
+addon.searchFrame.settingsFrame:SetPoint("TOPLEFT", addon.searchFrame.searchButton, "BOTTOMLEFT")
+addon.searchFrame.settingsFrame:SetPoint("RIGHT", addon.searchFrame, "RIGHT")
+addon.searchFrame.settingsFrame:Hide()
 
 ScrollUtil.InitScrollBoxListWithScrollBar(addon.searchFrame.scrollContainer, addon.searchFrame.scrollBar, ScrollView)
 
